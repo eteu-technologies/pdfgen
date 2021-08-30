@@ -63,20 +63,26 @@ type PDFGenerationSchema struct {
 type PDFGenerationData struct {
 	Html   string   `json:"html"`
 	Assets []string `json:"assets"`
-	Layout struct {
-		Orientation Orientation `json:"orientation"`
-		Size        struct {
-			Width  float64   `json:"width"`
-			Height float64   `json:"height"`
-			Preset *PageSize `json:"preset"`
-		} `json:"size"`
-		Margin struct {
-			Left   float64 `json:"left"`
-			Top    float64 `json:"top"`
-			Right  float64 `json:"right"`
-			Bottom float64 `json:"bottom"`
-		} `json:"margin"`
-	} `json:"layout"`
+	Layout layout   `json:"layout"`
+}
+
+type layout struct {
+	Orientation Orientation `json:"orientation"`
+	Size        PDFSize     `json:"size"`
+	Margin      PDFMargin   `json:"margin"`
+}
+
+type PDFSize struct {
+	Width  float64   `json:"width"`
+	Height float64   `json:"height"`
+	Preset *PageSize `json:"preset"`
+}
+
+type PDFMargin struct {
+	Left   float64 `json:"left"`
+	Top    float64 `json:"top"`
+	Right  float64 `json:"right"`
+	Bottom float64 `json:"bottom"`
 }
 
 func NewPDFGenerationData(payload PDFGenerationSchema) (d PDFGenerationData, err error) {
