@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
+	"path"
 	"strconv"
+	"sync"
 
+	"github.com/AubSs/fasthttplogger"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/davecgh/go-spew/spew"
@@ -19,6 +23,7 @@ import (
 
 var (
 	listenAddr = ":5000"
+	workdirs   sync.Map
 )
 
 func main() {
@@ -28,10 +33,11 @@ func main() {
 
 	router := router.New()
 	srv := fasthttp.Server{
-		Handler: router.Handler,
+		Handler: fasthttplogger.CombinedColored(router.Handler),
 	}
 
 	router.POST("/process", wrap(HandleProcess))
+	router.GET("/serve/{key}/{path:*}", wrap(HandleServe))
 
 	go func() {
 		if err := srv.ListenAndServe(listenAddr); err != nil {
@@ -55,6 +61,17 @@ func main() {
 func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 	pdfName := "processed.pdf"
 
+	// Parse pdf data
+	var pdfSchema PDFGenerationSchema
+	if err = json.Unmarshal(ctx.FormValue("generation"), &pdfSchema); err != nil {
+		return
+	}
+
+	pdfData, err := NewPDFGenerationData(pdfSchema)
+	if err != nil {
+		return err
+	}
+
 	var targetURL *url.URL
 	if rawURL := ctx.FormValue("url"); len(rawURL) > 0 {
 		targetURL, err = url.Parse(string(rawURL))
@@ -64,13 +81,23 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 
 		pdfName = targetURL.Hostname() + ".pdf"
 	} else {
-		// TODO: prepare workdir
-		return fmt.Errorf("uh-oh")
-	}
+		workdir, mainFile, err, cleanupFn := prepareWorkdir(ctx, pdfData)
+		if err != nil {
+			return err
+		}
 
-	pdfData, err := NewPDFGenerationData(PDFGenerationSchema{})
-	if err != nil {
-		return err
+		// TODO: nicer way to get workdir key
+		workdirKey := path.Base(workdir)
+		workdirs.Store(workdirKey, workdir)
+
+		log.Printf("created workdir '%s'", workdirKey)
+
+		defer func() {
+			log.Printf("cleaning up workdir '%s'", workdirKey)
+			workdirs.Delete(workdirKey)
+			cleanupFn()
+		}()
+		targetURL, _ = url.Parse(fmt.Sprintf(`http://127.0.0.1:5000/serve/%s/%s`, workdirKey, mainFile))
 	}
 
 	pdfBytes, err := runChromeDP(ctx, targetURL.String(), pdfData)
@@ -83,6 +110,21 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 	ctx.Response.Header.Add("Content-Disposition", `inline; filename=`+strconv.Quote(pdfName))
 	ctx.SetBody(pdfBytes)
 
+	return
+}
+
+func HandleServe(ctx *fasthttp.RequestCtx) (err error) {
+	workdirKey := ctx.UserValue("key")
+	rawWorkdir, ok := workdirs.Load(workdirKey)
+	if !ok {
+		ctx.SetStatusCode(http.StatusBadRequest)
+		return
+	}
+
+	// Strip two slashes, /serve/{key}/...
+	workdir := rawWorkdir.(string)
+	log.Printf("wd=%s", workdir)
+	fasthttp.FSHandler(workdir, 2)(ctx)
 	return
 }
 

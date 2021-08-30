@@ -3,6 +3,7 @@ module github.com/eteu-technologies/pdfgen
 go 1.16
 
 require (
+	github.com/AubSs/fasthttplogger v0.0.0-20170531123222-7dab642e7dab
 	github.com/chromedp/cdproto v0.0.0-20210829223513-dac050cc1a27
 	github.com/chromedp/chromedp v0.7.4
 	github.com/davecgh/go-spew v1.1.1

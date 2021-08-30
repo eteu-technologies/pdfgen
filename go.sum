@@ -1,3 +1,5 @@
+github.com/AubSs/fasthttplogger v0.0.0-20170531123222-7dab642e7dab h1:5lYZOhbzrWG4qvDKK53zQJpEEWPL0ThhkQ2mShrJVNI=
+github.com/AubSs/fasthttplogger v0.0.0-20170531123222-7dab642e7dab/go.mod h1:mMNQ8Id0u+AYt2LAB+PMq1IgaWcM02mK5Te7pZYhOCs=
 github.com/andybalholm/brotli v1.0.2 h1:JKnhI/XQ75uFBTiuzXpzFrUriDPiZjlOSzh6wXogP0E=
 github.com/andybalholm/brotli v1.0.2/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/chromedp/cdproto v0.0.0-20210713064928-7d28b402946a/go.mod h1:At5TxYYdxkbQL0TSefRjhLE3Q0lgvqKKMSFUglJ7i1U=
