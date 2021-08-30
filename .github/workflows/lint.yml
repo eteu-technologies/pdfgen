@@ -1,0 +1,21 @@
+name: lint
+on:
+  push:
+  pull_request:
+
+jobs:
+  golangci:
+    name: "Run linter (golangci-lint)"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v2"
+        with:
+          submodules: recursive
+          ssh-key: |
+            ${{ secrets.ETEU_BOT_DEPLOY_SSH_KEY }}
+
+      - name: "Run golangci-lint"
+        id: "run-linter"
+        uses: "golangci/golangci-lint-action@v2"
+        env:
+          GOPRIVATE: "github.com/eteu-technologies/*"
