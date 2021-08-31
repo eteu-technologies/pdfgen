@@ -14,18 +14,9 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-          ssh-key: |
-            ${{ secrets.ETEU_BOT_DEPLOY_SSH_KEY }}
 
       - name: "Set up Docker Buildx"
         uses: docker/setup-buildx-action@v1
-
-      - name: "Set up SSH keys for private modules"
-        id: "setup-ssh"
-        uses: "webfactory/ssh-agent@v0.5.0"
-        with:
-          ssh-private-key: |
-            ${{ secrets.ETEU_BOT_DEPLOY_SSH_KEY }}
 
       - name: "Log in into Docker Hub"
         id: "login-docker-hub"
