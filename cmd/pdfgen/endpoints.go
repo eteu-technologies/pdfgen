@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
 	"strconv"
 
 	"github.com/valyala/fasthttp"
+	"go.uber.org/zap"
 )
 
 func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
@@ -43,10 +43,10 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 		workdirKey := path.Base(workdir)
 		workdirs.Store(workdirKey, workdir)
 
-		log.Printf("created workdir '%s'", workdirKey)
+		zap.L().Debug("created workdir", zap.String("key", workdirKey))
 
 		defer func() {
-			log.Printf("cleaning up workdir '%s'", workdirKey)
+			zap.L().Debug("cleaning up", zap.String("key", workdirKey))
 			workdirs.Delete(workdirKey)
 			cleanupFn()
 		}()
@@ -76,7 +76,7 @@ func HandleServe(ctx *fasthttp.RequestCtx) (err error) {
 
 	// Strip two slashes, /serve/{key}/...
 	workdir := rawWorkdir.(string)
-	log.Printf("wd=%s", workdir)
+	zap.L().Debug("serving workdir", zap.String("key", workdirKey.(string)), zap.String("path", workdir))
 	fasthttp.FSHandler(workdir, 2)(ctx)
 	return
 }

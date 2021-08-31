@@ -2,16 +2,34 @@ package main
 
 import (
 	"context"
-	"log"
 
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/davecgh/go-spew/spew"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func runChromeDP(ctx context.Context, url string, pdfData PDFGenerationData) (buf []byte, err error) {
+	// Set up logger
+	logger := zap.NewStdLog(zap.L().With(zap.String("section", "chromedp"), zap.String("output", "stdout")))
+	opts := []chromedp.ContextOption{
+		chromedp.WithLogf(logger.Printf),
+	}
+
+	if debugMode {
+		errLogger, _ := zap.NewStdLogAt(zap.L().With(zap.String("section", "chromedp"), zap.String("output", "stderr")), zapcore.WarnLevel)
+		opts = append(opts, chromedp.WithErrorf(errLogger.Printf))
+
+		// NOTE: very verbose
+		/*
+			debugLogger, _ := zap.NewStdLogAt(zap.L().With(zap.String("section", "chromedp"), zap.String("output", "debug")), zapcore.DebugLevel)
+			opts = append(opts, chromedp.WithDebugf(debugLogger.Printf))
+		*/
+	}
+
 	// create context
-	ctx, cancel := chromedp.NewContext(ctx, chromedp.WithLogf(log.Printf))
+	ctx, cancel := chromedp.NewContext(ctx, opts...)
 	defer cancel()
 
 	// capture pdf

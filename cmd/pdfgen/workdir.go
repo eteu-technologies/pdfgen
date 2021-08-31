@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
-	"mime/multipart"
 	"os"
 	"path"
 
 	"github.com/valyala/fasthttp"
+	"go.uber.org/zap"
 )
 
 func prepareWorkdir(ctx *fasthttp.RequestCtx, data PDFGenerationData) (workdir string, mainFile string, err error, cleanupFn func()) {
@@ -25,7 +24,7 @@ func prepareWorkdir(ctx *fasthttp.RequestCtx, data PDFGenerationData) (workdir s
 	cleanupFn = func() {
 		if workdir != "" {
 			if err := os.RemoveAll(workdir); err != nil {
-				log.Printf("failed to clean up workdir '%s': %s", workdir, err)
+				zap.L().Error("failed to clean up workdir", zap.String("workdir", workdir), zap.Error(err))
 			}
 		}
 	}
@@ -70,20 +69,4 @@ func prepareWorkdir(ctx *fasthttp.RequestCtx, data PDFGenerationData) (workdir s
 	}
 
 	return
-}
-
-func getFile(form *multipart.Form, name string) (data []byte, err error) {
-	files := form.File[name]
-	if len(files) == 0 {
-		err = fmt.Errorf("file '%s' was not supplied", name)
-		return
-	}
-
-	file, err := files[0].Open()
-	if err != nil {
-		err = fmt.Errorf("failed to read file '%s'", name)
-	}
-
-	defer func() { _ = file.Close() }()
-	return ioutil.ReadAll(file)
 }
