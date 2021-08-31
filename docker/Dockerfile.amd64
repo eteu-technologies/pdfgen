@@ -15,7 +15,7 @@ RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
     -o /pdfgen ./cmd/pdfgen
 
 # Build final image
-FROM --platform=arm64 alpine:latest
+FROM --platform=amd64 alpine:latest
 
 RUN apk add --no-cache dumb-init chromium
 RUN adduser -D -h /app -s /bin/false app
