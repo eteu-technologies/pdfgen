@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,7 +16,7 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 
 	// Parse pdf data
 	var pdfSchema PDFGenerationSchema
-	if err = json.Unmarshal(ctx.FormValue("generation"), &pdfSchema); err != nil {
+	if err = unmarshalJson(ctx.FormValue("generation"), &pdfSchema); err != nil {
 		return
 	}
 
