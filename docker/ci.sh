@@ -4,8 +4,16 @@ set -euo pipefail
 : "${DOCKER_REPOSITORY:=eteu/pdfgen}"
 : "${IMAGE_COMMIT_TAG:=commit-"$(git rev-parse HEAD || echo "0000000000000000000000000000000000000000")"}"
 
+dockerfiles=(
+    ./docker/Dockerfile.amd64
+    # TODO:
+    # - ERROR: glib-2.68.3-r0.trigger: script exited with error 1
+    # - ERROR: gtk-update-icon-cache-2.24.33-r0.trigger: script exited with error 1
+    #./docker/Dockerfile.arm64
+)
+
 built_imgs=()
-for f in ./docker/Dockerfile.*; do
+for f in "${dockerfiles[@]}"; do
     f="$(basename -- "${f}")"
     arch="${f/Dockerfile\./}"
     ./docker/build_docker.sh "${arch}" --load || {
