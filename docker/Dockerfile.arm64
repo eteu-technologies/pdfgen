@@ -18,8 +18,14 @@ RUN GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build \
 FROM --platform=arm64 alpine:latest
 
 RUN apk add --no-cache dumb-init chromium
+RUN adduser -D -h /app -s /bin/false app
 
 COPY --from=builder /pdfgen /pdfgen
+
+USER app
+
+ENV ETEU_PDFGEN_LISTEN_ADDRESS=":5000"
+ENV ETEU_PDFGEN_NO_CHROME_SANDBOX="true"
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/pdfgen"]
