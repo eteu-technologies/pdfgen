@@ -5,7 +5,6 @@ import (
 
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
-	"github.com/davecgh/go-spew/spew"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -45,9 +44,6 @@ func printToPDF(url string, data PDFGenerationData, res *[]byte) chromedp.Tasks 
 	return chromedp.Tasks{
 		chromedp.Navigate(url),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-
-			spew.Dump(data)
-
 			printParams := page.PrintToPDF().
 				WithPrintBackground(false).
 				WithLandscape(data.Layout.Orientation == OrientationLandscape).
