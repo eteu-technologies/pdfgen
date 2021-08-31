@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 
 	"github.com/fasthttp/router"
@@ -12,9 +13,11 @@ import (
 )
 
 var (
-	listenAddr = ":5000"
-	debugMode  = true
-	workdirs   sync.Map
+	workdirs sync.Map
+
+	listenAddr      = os.Getenv("ETEU_PDFGEN_LISTEN_ADDRESS")
+	debugMode       = strings.ToLower(os.Getenv("ETEU_PDFGEN_DEBUG")) == "true"
+	noChromeSandbox = strings.ToLower(os.Getenv("ETEU_PDFGEN_NO_CHROME_SANDBOX")) == "true"
 )
 
 func main() {

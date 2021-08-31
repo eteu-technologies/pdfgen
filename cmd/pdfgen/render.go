@@ -10,6 +10,12 @@ import (
 )
 
 func runChromeDP(ctx context.Context, url string, pdfData PDFGenerationData) (buf []byte, err error) {
+	allocatorOpts := append([]chromedp.ExecAllocatorOption{}, chromedp.DefaultExecAllocatorOptions[:]...)
+
+	if noChromeSandbox {
+		allocatorOpts = append(allocatorOpts, chromedp.NoSandbox)
+	}
+
 	// Set up logger
 	logger := zap.NewStdLog(zap.L().With(zap.String("section", "chromedp"), zap.String("output", "stdout")))
 	opts := []chromedp.ContextOption{
@@ -27,11 +33,15 @@ func runChromeDP(ctx context.Context, url string, pdfData PDFGenerationData) (bu
 		*/
 	}
 
-	// create context
-	ctx, cancel := chromedp.NewContext(ctx, opts...)
+	// Create browser allocator
+	allocator, cancel := chromedp.NewExecAllocator(ctx, allocatorOpts...)
 	defer cancel()
 
-	// capture pdf
+	// Create context
+	ctx, cancel2 := chromedp.NewContext(allocator, opts...)
+	defer cancel2()
+
+	// Capture pdf
 	if err = chromedp.Run(ctx, printToPDF(url, pdfData, &buf)); err != nil {
 		return
 	}
