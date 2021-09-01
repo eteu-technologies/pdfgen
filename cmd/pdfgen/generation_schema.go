@@ -5,42 +5,6 @@ import (
 	"fmt"
 )
 
-// Based on https://pspdfkit.com/guides/processor/pdf-generation/pdf-generation-schema/
-/*
-type Orientation = "landscape" | "portrait";
-type PageSize =
-  | "A0"
-  | "A1"
-  | "A2"
-  | "A3"
-  | "A4"
-  | "A5"
-  | "A6"
-  | "A7"
-  | "A8"
-  | "Letter"
-  | "Legal";
-
-type PdfGenerationSchema = {
-  html: string, // The HTML file passed in the multipart request.
-  assets?: Array<string>, // All assets imported in the HTML. Reference the name passed in the multipart request.
-  layout?: {
-    orientation?: Orientation,
-    size?: {
-      width: number,
-      height: number
-    } | PageSize, // {width, height} in mm or page size preset.
-    margin?: {
-      // Margin sizes in mm.
-      left: number,
-      top: number,
-      right: number,
-      bottom: number
-    }
-  }
-};
-*/
-
 type PDFGenerationSchema struct {
 	// The HTML file passed in the multipart request.
 	Html string `json:"html"`
@@ -94,10 +58,10 @@ func NewPDFGenerationData(payload PDFGenerationSchema) (d PDFGenerationData, err
 	d.Layout.Orientation = OrientationPortrait
 	d.Layout.Size.Preset, d.Layout.Size.Width, d.Layout.Size.Height = pageSize.Preset(d.Layout.Orientation)
 
-	d.Layout.Margin.Left = 10
-	d.Layout.Margin.Top = 10
-	d.Layout.Margin.Right = 10
-	d.Layout.Margin.Bottom = 10
+	d.Layout.Margin.Left = 0
+	d.Layout.Margin.Top = 0
+	d.Layout.Margin.Right = 0
+	d.Layout.Margin.Bottom = 0
 
 	if l := payload.Layout; l != nil {
 		// Try to copy orientation
