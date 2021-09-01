@@ -16,6 +16,7 @@ built_imgs=()
 for f in "${dockerfiles[@]}"; do
     f="$(basename -- "${f}")"
     arch="${f/Dockerfile\./}"
+    echo ">>> Building image for '${arch}'"
     ./docker/build_docker.sh "${arch}" --load || {
         echo ">>> Failed to build image for arch '${arch}'"
         exit 1
