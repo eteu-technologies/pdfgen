@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
@@ -34,8 +35,12 @@ func main() {
 	// Set up HTTP server
 	router := router.New()
 	srv := fasthttp.Server{
-		Handler: requestLogger(router.Handler),
+		Handler:            requestLogger(router.Handler),
 		MaxRequestBodySize: 100 * 1024 * 1024,
+		ReadTimeout:        30 * time.Second,
+		WriteTimeout:       30 * time.Second,
+		IdleTimeout:        30 * time.Second,
+		Logger:             zap.NewStdLog(zap.L().With(zap.String("section", "http"))),
 	}
 
 	router.POST("/process", wrap(HandleProcess))
