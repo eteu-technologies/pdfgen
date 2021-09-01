@@ -35,6 +35,7 @@ func main() {
 	router := router.New()
 	srv := fasthttp.Server{
 		Handler: requestLogger(router.Handler),
+		MaxRequestBodySize: 100 * 1024 * 1024,
 	}
 
 	router.POST("/process", wrap(HandleProcess))
