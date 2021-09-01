@@ -61,6 +61,8 @@ func main() {
 		// no-op
 	}
 
+	zap.L().Info("shutting down")
+
 	if err := srv.Shutdown(); err != nil {
 		zap.L().Error("failed to shutdown the http server", zap.Error(err))
 	}
