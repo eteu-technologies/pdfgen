@@ -55,7 +55,7 @@ func printToPDF(url string, data PDFGenerationData, res *[]byte) chromedp.Tasks 
 		chromedp.Navigate(url),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			printParams := page.PrintToPDF().
-				WithPrintBackground(false).
+				WithPrintBackground(true).
 				WithLandscape(data.Layout.Orientation == OrientationLandscape).
 				WithPreferCSSPageSize(true).
 				WithDisplayHeaderFooter(false). // NOTE: keep this off at all times.
