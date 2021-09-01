@@ -59,12 +59,12 @@ func printToPDF(url string, data PDFGenerationData, res *[]byte) chromedp.Tasks 
 				WithLandscape(data.Layout.Orientation == OrientationLandscape).
 				WithPreferCSSPageSize(true).
 				WithDisplayHeaderFooter(false). // NOTE: keep this off at all times.
-				WithPaperHeight(float64(data.Layout.Size.Height) / 25.4).
-				WithPaperWidth(float64(data.Layout.Size.Width) / 25.4).
-				WithMarginLeft(float64(data.Layout.Margin.Left) / 25.4).
-				WithMarginTop(float64(data.Layout.Margin.Top) / 25.4).
-				WithMarginRight(float64(data.Layout.Margin.Right) / 25.4).
-				WithMarginBottom(float64(data.Layout.Margin.Bottom) / 25.4)
+				WithPaperHeight(toInches(data.Layout.Size.Height)).
+				WithPaperWidth(toInches(data.Layout.Size.Width)).
+				WithMarginLeft(toInches(data.Layout.Margin.Left)).
+				WithMarginTop(toInches(data.Layout.Margin.Top)).
+				WithMarginRight(toInches(data.Layout.Margin.Right)).
+				WithMarginBottom(toInches(data.Layout.Margin.Bottom))
 
 			buf, _, err := printParams.Do(ctx)
 			if err != nil {
@@ -75,4 +75,8 @@ func printToPDF(url string, data PDFGenerationData, res *[]byte) chromedp.Tasks 
 			return nil
 		}),
 	}
+}
+
+func toInches(mm float64) float64 {
+	return mm / 25.4
 }
