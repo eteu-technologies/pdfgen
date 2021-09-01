@@ -11,6 +11,8 @@ import (
 	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/eteu-technologies/pdfgen/internal/core"
 )
 
 var (
@@ -34,6 +36,8 @@ func main() {
 		panic(err)
 	}
 	defer func() { _ = zap.L().Sync() }()
+
+	zap.L().Info("pdfgen", zap.String("version", core.Version))
 
 	// Set up HTTP server
 	arouter := router.New()
