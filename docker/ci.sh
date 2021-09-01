@@ -6,7 +6,10 @@ set -euo pipefail
 
 dockerfiles=(
     ./docker/Dockerfile.amd64
-    ./docker/Dockerfile.arm64
+    # TODO:
+    # - ERROR: glib-2.68.3-r0.trigger: script exited with error 1
+    # - ERROR: gtk-update-icon-cache-2.24.33-r0.trigger: script exited with error 1
+    #./docker/Dockerfile.arm64
 )
 
 built_imgs=()
