@@ -16,6 +16,9 @@ import (
 var (
 	workdirs sync.Map
 
+	iListenAddr = "127.0.0.1:8900"
+	iServerAddr = "localhost:8900"
+
 	listenAddr      = os.Getenv("ETEU_PDFGEN_LISTEN_ADDRESS")
 	debugMode       = strings.ToLower(os.Getenv("ETEU_PDFGEN_DEBUG")) == "true"
 	noChromeSandbox = strings.ToLower(os.Getenv("ETEU_PDFGEN_NO_CHROME_SANDBOX")) == "true"
@@ -33,9 +36,9 @@ func main() {
 	defer func() { _ = zap.L().Sync() }()
 
 	// Set up HTTP server
-	router := router.New()
-	srv := fasthttp.Server{
-		Handler:            requestLogger(router.Handler),
+	arouter := router.New()
+	asrv := fasthttp.Server{
+		Handler:            requestLogger(arouter.Handler),
 		MaxRequestBodySize: 100 * 1024 * 1024,
 		ReadTimeout:        30 * time.Second,
 		WriteTimeout:       30 * time.Second,
@@ -43,13 +46,33 @@ func main() {
 		Logger:             zap.NewStdLog(zap.L().With(zap.String("section", "http"))),
 	}
 
-	router.POST("/process", wrap(HandleProcess))
-	router.GET("/serve/{key}/{path:*}", wrap(HandleServe))
+	arouter.POST("/process", wrap(HandleProcess))
 
-	zap.L().Info("starting http server", zap.String("at", listenAddr))
+	// Set up another HTTP server for internal file serving
+	frouter := router.New()
+	fsrv := fasthttp.Server{
+		Handler:      requestLogger(frouter.Handler),
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  30 * time.Second,
+		Logger:       zap.NewStdLog(zap.L().With(zap.String("section", "http"))),
+		GetOnly:      true,
+	}
+
+	frouter.GET("/{key}/{path:*}", wrap(HandleServe))
+
+	zap.L().Info("starting api http server", zap.String("at", listenAddr))
 	go func() {
-		if err := srv.ListenAndServe(listenAddr); err != nil {
-			zap.L().Error("failed to listen for http", zap.Error(err))
+		if err := asrv.ListenAndServe(listenAddr); err != nil {
+			zap.L().Error("failed to listen for api http", zap.Error(err))
+			exitCh <- true
+		}
+	}()
+
+	zap.L().Info("starting internal http server", zap.String("at", iListenAddr))
+	go func() {
+		if err := fsrv.ListenAndServe(iListenAddr); err != nil {
+			zap.L().Error("failed to listen for internal http", zap.Error(err))
 			exitCh <- true
 		}
 	}()
@@ -63,8 +86,12 @@ func main() {
 
 	zap.L().Info("shutting down")
 
-	if err := srv.Shutdown(); err != nil {
-		zap.L().Error("failed to shutdown the http server", zap.Error(err))
+	if err := asrv.Shutdown(); err != nil {
+		zap.L().Error("failed to shutdown the api http server", zap.Error(err))
+	}
+
+	if err := fsrv.Shutdown(); err != nil {
+		zap.L().Error("failed to shutdown the internal http server", zap.Error(err))
 	}
 }
 

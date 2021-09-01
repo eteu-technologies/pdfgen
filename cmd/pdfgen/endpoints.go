@@ -50,7 +50,7 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 			workdirs.Delete(workdirKey)
 			cleanupFn()
 		}()
-		targetURL, _ = url.Parse(fmt.Sprintf(`http://127.0.0.1:5000/serve/%s/%s`, workdirKey, mainFile))
+		targetURL, _ = url.Parse(fmt.Sprintf(`http://%s/%s/%s`, iServerAddr, workdirKey, mainFile))
 	}
 
 	pdfBytes, err := runChromeDP(ctx, targetURL.String(), pdfData)
@@ -74,9 +74,9 @@ func HandleServe(ctx *fasthttp.RequestCtx) (err error) {
 		return
 	}
 
-	// Strip two slashes, /serve/{key}/...
+	// Strip one slash, /{key}/...
 	workdir := rawWorkdir.(string)
 	zap.L().Debug("serving workdir", zap.String("key", workdirKey.(string)), zap.String("path", workdir))
-	fasthttp.FSHandler(workdir, 2)(ctx)
+	fasthttp.FSHandler(workdir, 1)(ctx)
 	return
 }
