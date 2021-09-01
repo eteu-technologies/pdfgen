@@ -21,6 +21,10 @@
         packages.eteu-pdfgen = pkgs.callPackage ./default.nix { rev = if (self ? rev) then self.rev else "dirty"; };
 
         defaultPackage = packages.eteu-pdfgen;
+        defaultApp = {
+          type = "app";
+          program = "${packages.eteu-pdfgen}/bin/pdfgen";
+        };
 
         devShell = pkgs.mkShell {
           nativeBuildInputs =
