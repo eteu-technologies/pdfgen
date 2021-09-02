@@ -19,22 +19,20 @@ func (p *PageSize) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
-func (p *PageSize) Preset(or Orientation) (*PageSize, float64, float64) {
-	return PageSizes[*p](or)
+func (p *PageSize) Preset() (*PageSize, float64, float64) {
+	ps := PageSizes[*p]
+	return p, ps.W, ps.H
 }
 
-type PageSizePreset func(or Orientation) (*PageSize, float64, float64)
+type PageSizePreset struct {
+	W float64
+	H float64
+}
 
 func newPreset(name PageSize, w, h float64) PageSizePreset {
-	return func(or Orientation) (*PageSize, float64, float64) {
-		switch or {
-		case OrientationPortrait:
-			return &name, w, h
-		case OrientationLandscape:
-			return &name, h, w
-		default:
-			panic("unreachable")
-		}
+	return PageSizePreset{
+		W: w,
+		H: h,
 	}
 }
 

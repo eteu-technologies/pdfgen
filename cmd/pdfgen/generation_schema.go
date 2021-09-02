@@ -56,7 +56,7 @@ func NewPDFGenerationData(payload PDFGenerationSchema) (d PDFGenerationData, err
 	d.Assets = append([]string{}, payload.Assets...)
 
 	d.Layout.Orientation = OrientationPortrait
-	d.Layout.Size.Preset, d.Layout.Size.Width, d.Layout.Size.Height = pageSize.Preset(d.Layout.Orientation)
+	d.Layout.Size.Preset, d.Layout.Size.Width, d.Layout.Size.Height = pageSize.Preset()
 
 	d.Layout.Margin.Left = 0
 	d.Layout.Margin.Top = 0
@@ -93,7 +93,7 @@ func NewPDFGenerationData(payload PDFGenerationSchema) (d PDFGenerationData, err
 					err = fmt.Errorf("failed to unmarshal page size: %w", err)
 					return
 				}
-				d.Layout.Size.Preset, d.Layout.Size.Width, d.Layout.Size.Height = ps.Preset(d.Layout.Orientation)
+				d.Layout.Size.Preset, d.Layout.Size.Width, d.Layout.Size.Height = ps.Preset()
 			}
 		}
 
