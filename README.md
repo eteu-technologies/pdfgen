@@ -2,9 +2,9 @@
 
 [![Lint](https://github.com/eteu-technologies/pdfgen/actions/workflows/lint.yml/badge.svg)](https://github.com/eteu-technologies/pdfgen/actions/workflows/lint.yml)
 [![Build](https://github.com/eteu-technologies/pdfgen/actions/workflows/build.yml/badge.svg)](https://github.com/eteu-technologies/pdfgen/actions/workflows/build.yml)
-[![built with nix](https://builtwithnix.org/badge.svg)](https://builtwithnix.org)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Feteu-technologies%2Fpdfgen.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Feteu-technologies%2Fpdfgen?ref=badge_shield)
 
+[![built with nix](https://builtwithnix.org/badge.svg)](https://builtwithnix.org)
 
 Microservice for generating PDF files from HTML and assets easily.
 
