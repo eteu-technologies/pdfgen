@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
@@ -33,8 +34,12 @@ func runChromeDP(ctx context.Context, url string, pdfData PDFGenerationData) (bu
 		*/
 	}
 
+	// Create separate timeout context
+	timeoutCtx, tcancel := context.WithTimeout(ctx, time.Duration(rendererTimeout)*time.Millisecond)
+	defer tcancel()
+
 	// Create browser allocator
-	allocator, cancel := chromedp.NewExecAllocator(ctx, allocatorOpts...)
+	allocator, cancel := chromedp.NewExecAllocator(timeoutCtx, allocatorOpts...)
 	defer cancel()
 
 	// Create context

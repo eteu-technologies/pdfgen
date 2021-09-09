@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -21,12 +22,14 @@ var (
 	iListenAddr = "127.0.0.1:8900"
 	iServerAddr = "localhost:8900"
 
-	listenAddr      = os.Getenv("ETEU_PDFGEN_LISTEN_ADDRESS")
-	debugMode       = strings.ToLower(os.Getenv("ETEU_PDFGEN_DEBUG")) == "true"
-	noChromeSandbox = strings.ToLower(os.Getenv("ETEU_PDFGEN_NO_CHROME_SANDBOX")) == "true"
+	listenAddr             = os.Getenv("ETEU_PDFGEN_LISTEN_ADDRESS")
+	debugMode              = strings.ToLower(os.Getenv("ETEU_PDFGEN_DEBUG")) == "true"
+	noChromeSandbox        = strings.ToLower(os.Getenv("ETEU_PDFGEN_NO_CHROME_SANDBOX")) == "true"
+	rendererTimeout uint64 = 45000 // milliseconds
 )
 
 func main() {
+	var err error
 	sigCh := make(chan os.Signal, 1)
 	exitCh := make(chan bool, 1)
 	signal.Notify(sigCh, os.Interrupt)
@@ -38,6 +41,12 @@ func main() {
 	defer func() { _ = zap.L().Sync() }()
 
 	zap.L().Info("pdfgen", zap.String("version", core.Version))
+
+	if timeoutValue := os.Getenv("ETEU_PDFGEN_RENDERER_TIMEOUT"); timeoutValue != "" {
+		if rendererTimeout, err = strconv.ParseUint(timeoutValue, 10, 64); err != nil {
+			zap.L().Fatal("failed to parse renderer timeout", zap.Error(err), zap.String("value", timeoutValue))
+		}
+	}
 
 	// Set up HTTP server
 	arouter := router.New()
