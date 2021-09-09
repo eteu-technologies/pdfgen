@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -54,7 +56,10 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 	}
 
 	pdfBytes, err := runChromeDP(ctx, targetURL.String(), pdfData)
-	if err != nil {
+	if errors.Is(err, context.DeadlineExceeded) {
+		ctx.Error(err.Error(), http.StatusServiceUnavailable)
+		return nil
+	} else if err != nil {
 		return err
 	}
 
