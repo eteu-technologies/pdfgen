@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/chromedp/cdproto/page"
@@ -17,10 +19,10 @@ type BrowserRunner struct {
 }
 
 type browserTask struct {
-	ctx     context.Context
-	url     string
-	pdfData PDFGenerationData
-	result  chan interface{}
+	ctx            context.Context
+	pdfData        PDFGenerationData
+	workdirPrepare func(context.Context) (*url.URL, error)
+	result         chan interface{}
 }
 
 var (
@@ -37,10 +39,10 @@ func NewBrowserRunner(concurrency int) *BrowserRunner {
 	return br
 }
 
-func (br *BrowserRunner) ScheduleRender(ctx context.Context, url string, pdfData PDFGenerationData) (buf []byte, err error) {
+func (br *BrowserRunner) ScheduleRender(ctx context.Context, pdfData PDFGenerationData, prepareWorkdir func(context.Context) (*url.URL, error)) (buf []byte, err error) {
 	resultCh := make(chan interface{})
 	defer close(resultCh)
-	br.tasks <- browserTask{ctx, url, pdfData, resultCh}
+	br.tasks <- browserTask{ctx, pdfData, prepareWorkdir, resultCh}
 
 	select {
 	case <-ctx.Done():
@@ -80,7 +82,13 @@ func (br *BrowserRunner) processTasks() {
 				}
 			}()
 
-			buf, err := br.runChromeDP(task.ctx, task.url, task.pdfData)
+			url, err := task.workdirPrepare(task.ctx)
+			if err != nil {
+				task.result <- fmt.Errorf("failed to prepare workdir: %w", err)
+				return
+			}
+
+			buf, err := br.runChromeDP(task.ctx, url.String(), task.pdfData)
 			if err != nil {
 				task.result <- err
 			} else {
