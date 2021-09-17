@@ -55,7 +55,7 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 		targetURL, _ = url.Parse(fmt.Sprintf(`http://%s/%s/%s`, iServerAddr, workdirKey, mainFile))
 	}
 
-	pdfBytes, err := runChromeDP(ctx, targetURL.String(), pdfData)
+	pdfBytes, err := browserRunner.ScheduleRender(ctx, targetURL.String(), pdfData)
 	if errors.Is(err, context.DeadlineExceeded) {
 		ctx.Error(err.Error(), http.StatusServiceUnavailable)
 		return nil

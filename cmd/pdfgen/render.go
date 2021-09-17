@@ -10,7 +10,88 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func runChromeDP(ctx context.Context, url string, pdfData PDFGenerationData) (buf []byte, err error) {
+type BrowserRunner struct {
+	tasks       chan browserTask
+	concurrency int
+	closed      bool
+}
+
+type browserTask struct {
+	ctx     context.Context
+	url     string
+	pdfData PDFGenerationData
+	result  chan interface{}
+}
+
+var (
+	browserRunner *BrowserRunner
+)
+
+func NewBrowserRunner(concurrency int) *BrowserRunner {
+	br := &BrowserRunner{
+		tasks:       make(chan browserTask),
+		concurrency: concurrency,
+	}
+	zap.L().Debug("renderer concurrency", zap.Int("concurrency", concurrency))
+	go br.processTasks()
+	return br
+}
+
+func (br *BrowserRunner) ScheduleRender(ctx context.Context, url string, pdfData PDFGenerationData) (buf []byte, err error) {
+	resultCh := make(chan interface{})
+	defer close(resultCh)
+	br.tasks <- browserTask{ctx, url, pdfData, resultCh}
+
+	select {
+	case <-ctx.Done():
+		err = ctx.Err()
+		return
+	case res := <-resultCh:
+		if rerr, ok := res.(error); ok {
+			err = rerr
+			return
+		}
+		buf = res.([]byte)
+	}
+
+	return
+}
+
+func (br *BrowserRunner) Close() (err error) {
+	if br.closed {
+		return
+	}
+	br.closed = true
+	close(br.tasks)
+	return
+}
+
+func (br *BrowserRunner) processTasks() {
+	guard := make(chan struct{}, br.concurrency)
+	for task := range br.tasks {
+		if br.concurrency > 0 {
+			guard <- struct{}{}
+		}
+
+		go func(task browserTask) {
+			defer func() {
+				if br.concurrency > 0 {
+					<-guard
+				}
+			}()
+
+			buf, err := br.runChromeDP(task.ctx, task.url, task.pdfData)
+			if err != nil {
+				task.result <- err
+			} else {
+				task.result <- buf
+			}
+		}(task)
+	}
+	zap.L().Debug("tasks channel closed")
+}
+
+func (br *BrowserRunner) runChromeDP(ctx context.Context, url string, pdfData PDFGenerationData) (buf []byte, err error) {
 	allocatorOpts := append([]chromedp.ExecAllocatorOption{}, chromedp.DefaultExecAllocatorOptions[:]...)
 
 	if noChromeSandbox {

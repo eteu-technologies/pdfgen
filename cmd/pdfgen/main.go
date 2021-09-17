@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,10 +23,11 @@ var (
 	iListenAddr = "127.0.0.1:8900"
 	iServerAddr = "localhost:8900"
 
-	listenAddr             = os.Getenv("ETEU_PDFGEN_LISTEN_ADDRESS")
-	debugMode              = strings.ToLower(os.Getenv("ETEU_PDFGEN_DEBUG")) == "true"
-	noChromeSandbox        = strings.ToLower(os.Getenv("ETEU_PDFGEN_NO_CHROME_SANDBOX")) == "true"
-	rendererTimeout uint64 = 45000 // milliseconds
+	listenAddr                  = os.Getenv("ETEU_PDFGEN_LISTEN_ADDRESS")
+	debugMode                   = strings.ToLower(os.Getenv("ETEU_PDFGEN_DEBUG")) == "true"
+	noChromeSandbox             = strings.ToLower(os.Getenv("ETEU_PDFGEN_NO_CHROME_SANDBOX")) == "true"
+	rendererTimeout      uint64 = 45000 // milliseconds
+	maxConcurrentRenders uint64 = max(uint64(runtime.NumCPU()/2), 1)
 )
 
 func main() {
@@ -47,6 +49,15 @@ func main() {
 			zap.L().Fatal("failed to parse renderer timeout", zap.Error(err), zap.String("value", timeoutValue))
 		}
 	}
+
+	if maxConcurrentRendersValue := os.Getenv("ETEU_PDFGEN_RENDERER_MAX_CONCURRENCY"); maxConcurrentRendersValue != "" {
+		if maxConcurrentRenders, err = strconv.ParseUint(maxConcurrentRendersValue, 10, 64); err != nil {
+			zap.L().Fatal("failed to parse renderer max concurrency", zap.Error(err), zap.String("value", maxConcurrentRendersValue))
+		}
+	}
+
+	// Set up renderer
+	browserRunner = NewBrowserRunner(int(maxConcurrentRenders))
 
 	// Set up HTTP server
 	arouter := router.New()
@@ -106,6 +117,10 @@ func main() {
 	if err := fsrv.Shutdown(); err != nil {
 		zap.L().Error("failed to shutdown the internal http server", zap.Error(err))
 	}
+
+	if err := browserRunner.Close(); err != nil {
+		zap.L().Error("failed to shutdown the renderer", zap.Error(err))
+	}
 }
 
 func configureLogging(debug bool) error {
@@ -133,4 +148,11 @@ func configureLogging(debug bool) error {
 	zap.ReplaceGlobals(logger)
 
 	return nil
+}
+
+func max(a, b uint64) uint64 {
+	if a > b {
+		return a
+	}
+	return b
 }
