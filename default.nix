@@ -1,4 +1,4 @@
-{ lib, buildGoModule, runCommandNoCC, git, rev ? null }:
+{ lib, buildGoModule, go_1_17, runCommandNoCC, git, rev ? null }:
 
 let
   versionInfo = src: import (runCommandNoCC "eteu-pdfgen-version" { } ''
@@ -8,8 +8,10 @@ let
 
   # Need to keep .git around for version string
   srcCleaner = name: type: let baseName = baseNameOf (toString name); in (baseName == ".git" || lib.cleanSourceFilter name type);
+
+  buildGo117Module = buildGoModule.override { go = go_1_17; };
 in
-buildGoModule rec {
+buildGo117Module rec {
   pname = "eteu-pdfgen";
   version = if (rev != null) then rev else (versionInfo src).version;
 
@@ -21,6 +23,6 @@ buildGoModule rec {
 
   doCheck = true;
 
-  vendorSha256 = "sha256-v8cWnkCNP4PAT6Bz/8GmY2EUysgTI6XTCfzhXuumvak=";
+  vendorSha256 = "sha256-6z0Ophzh3q9bluXlNQ9YRX/FHEclAioMQrbi6GgBkTo=";
   subPackages = [ "cmd/pdfgen" ];
 }
