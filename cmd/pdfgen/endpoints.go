@@ -27,35 +27,42 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 		return err
 	}
 
-	var targetURL *url.URL
-	if rawURL := ctx.FormValue("url"); len(rawURL) > 0 {
-		targetURL, err = url.Parse(string(rawURL))
-		if err != nil {
-			return err
-		}
-
-		pdfName = targetURL.Hostname() + ".pdf"
-	} else {
-		workdir, mainFile, err, cleanupFn := prepareWorkdir(ctx, pdfData)
-		if err != nil {
-			return err
-		}
-
-		// TODO: nicer way to get workdir key
-		workdirKey := path.Base(workdir)
-		workdirs.Store(workdirKey, workdir)
-
-		zap.L().Debug("created workdir", zap.String("key", workdirKey))
-
-		defer func() {
+	var workdirKey string
+	var cleanupFn func()
+	defer func() {
+		if workdirKey != "" {
 			zap.L().Debug("cleaning up", zap.String("key", workdirKey))
 			workdirs.Delete(workdirKey)
 			cleanupFn()
-		}()
-		targetURL, _ = url.Parse(fmt.Sprintf(`http://%s/%s/%s`, iServerAddr, workdirKey, mainFile))
-	}
+		}
+	}()
 
-	pdfBytes, err := runChromeDP(ctx, targetURL.String(), pdfData)
+	pdfBytes, err := renderer.Schedule(ctx, pdfData, func(wctx context.Context) (*url.URL, error) {
+		var targetURL *url.URL
+		if rawURL := ctx.FormValue("url"); len(rawURL) > 0 {
+			targetURL, err = url.Parse(string(rawURL))
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse target url: %w", err)
+			}
+
+			pdfName = targetURL.Hostname() + ".pdf"
+		} else {
+			var workdir, mainFile string
+			workdir, mainFile, err, cleanupFn = prepareWorkdir(ctx, pdfData)
+			if err != nil {
+				return nil, err
+			}
+
+			// TODO: nicer way to get workdir key
+			workdirKey = path.Base(workdir)
+			workdirs.Store(workdirKey, workdir)
+
+			zap.L().Debug("created workdir", zap.String("key", workdirKey))
+			targetURL, _ = url.Parse(fmt.Sprintf(`http://%s/%s/%s`, iServerAddr, workdirKey, mainFile))
+		}
+
+		return targetURL, nil
+	})
 	if errors.Is(err, context.DeadlineExceeded) {
 		ctx.Error(err.Error(), http.StatusServiceUnavailable)
 		return nil
