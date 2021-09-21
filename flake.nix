@@ -29,7 +29,7 @@
         devShell = pkgs.mkShell {
           nativeBuildInputs =
             [
-              pkgs.go
+              pkgs.go_1_17
               pkgs.golangci-lint
               pkgs.gopls
               pkgs.curl
