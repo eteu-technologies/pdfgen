@@ -57,7 +57,7 @@ func main() {
 	}
 
 	// Set up renderer
-	browserRunner = NewBrowserRunner(int(maxConcurrentRenders))
+	renderer = NewRenderer(maxConcurrentRenders)
 
 	// Set up HTTP server
 	arouter := router.New()
@@ -118,7 +118,7 @@ func main() {
 		zap.L().Error("failed to shutdown the internal http server", zap.Error(err))
 	}
 
-	if err := browserRunner.Close(); err != nil {
+	if err := renderer.Close(); err != nil {
 		zap.L().Error("failed to shutdown the renderer", zap.Error(err))
 	}
 }

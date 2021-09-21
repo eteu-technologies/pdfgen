@@ -48,7 +48,7 @@ func HandleProcess(ctx *fasthttp.RequestCtx) (err error) {
 		}
 	}()
 
-	pdfBytes, err := browserRunner.ScheduleRender(ctx, pdfData, func(wctx context.Context) (*url.URL, error) {
+	pdfBytes, err := renderer.Schedule(ctx, pdfData, func(wctx context.Context) (*url.URL, error) {
 		if targetURL != nil {
 			return targetURL, nil
 		}

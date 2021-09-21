@@ -17,11 +17,12 @@ func wrap(handler func(ctx *fasthttp.RequestCtx) error) func(ctx *fasthttp.Reque
 	return func(ctx *fasthttp.RequestCtx) {
 		defer func() {
 			if p := recover(); p != nil {
-				zap.L().With(zap.String("section", "http")).Error("recovered from panic", zap.Reflect("error", p))
+				zap.L().With(zap.String("section", "http")).Error("recovered from panic", zap.Reflect("err", p))
 				ctx.Error(fmt.Sprintf("panic: %+v", p), http.StatusInternalServerError)
 			}
 		}()
 		if err := handler(ctx); err != nil {
+			zap.L().With(zap.String("section", "http")).Error("handler error", zap.Error(err))
 			ctx.Error(err.Error(), http.StatusInternalServerError)
 		}
 	}
