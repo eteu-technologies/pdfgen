@@ -18,7 +18,9 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in
       rec {
-        packages.eteu-pdfgen = pkgs.callPackage ./default.nix { rev = if (self ? rev) then self.rev else "dirty"; };
+        packages.eteu-pdfgen = pkgs.callPackage ./default.nix {
+          rev = self.rev or "dirty";
+        };
 
         defaultPackage = packages.eteu-pdfgen;
         defaultApp = {
