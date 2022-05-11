@@ -15,9 +15,7 @@ generation from scratch; no special handling for inputs (no fillable forms)).
 
 ## Running
 
-We're publishing x86_64 Linux Docker images on [Docker Hub](https://hub.docker.com/r/eteu/pdfgen).
-
-aarch64 Linux images are planned.
+We're publishing x86\_64 and aarch64 Linux Docker images on [Docker Hub](https://hub.docker.com/r/eteu/pdfgen).
 
 Recommended way to run the generator microservice:
 

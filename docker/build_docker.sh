@@ -31,15 +31,13 @@ fixup_arch () {
 arch="$(fixup_arch "${arch}")"
 hostarch="$(fixup_arch "${hostarch}")"
 
-if ! [ -f docker/Dockerfile."${arch}" ]; then
-	echo "'docker/Dockerfile."${arch}"' does not exist"
-	exit 1
-fi
-
 docker buildx build \
-	--platform "${arch}" \
-	--build-arg BUILDPLATFORM="${hostarch}" \
-        --build-arg PROJ_VERSION="${PROJ_VERSION}" \
+	--platform "linux/${arch}" \
+	--build-arg PROJ_VERSION="${PROJ_VERSION}" \
 	"${@}" \
-        -t eteu/pdfgen:"${arch}" \
-        -f docker/Dockerfile."${arch}" .
+	-t eteu/pdfgen:"${arch}" \
+	-f docker/Dockerfile .
+
+if [ "${hostarch}" = "${arch}" ]; then
+	docker tag eteu/pdfgen:"${arch}" eteu/pdfgen:latest
+fi
