@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -16,7 +15,7 @@ func prepareWorkdir(ctx *fasthttp.RequestCtx, data PDFGenerationData) (workdir s
 		return
 	}
 
-	workdir, err = ioutil.TempDir("", "pdfgenwd")
+	workdir, err = os.MkdirTemp("", "pdfgenwd")
 	if err != nil {
 		return
 	}
@@ -61,7 +60,7 @@ func prepareWorkdir(ctx *fasthttp.RequestCtx, data PDFGenerationData) (workdir s
 	// Copy files
 	for name, bytes := range files {
 		target := path.Join(workdir, name)
-		if err = ioutil.WriteFile(target, bytes, 0600); err != nil {
+		if err = os.WriteFile(target, bytes, 0600); err != nil {
 			err = fmt.Errorf("failed to write '%s': %w", target, err)
 			go cleanupFn()
 			return
