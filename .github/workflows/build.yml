@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - master
+  schedule:
+    - cron: '0 0 1-7 * 4' # https://crontab.guru/#0_0_1-7_*_4
 
 jobs:
   build:

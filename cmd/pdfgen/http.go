@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"time"
@@ -47,7 +47,7 @@ func getFile(form *multipart.Form, name string) (data []byte, err error) {
 	}
 
 	defer func() { _ = file.Close() }()
-	return ioutil.ReadAll(file)
+	return io.ReadAll(file)
 }
 
 func requestLogger(req fasthttp.RequestHandler) fasthttp.RequestHandler {
